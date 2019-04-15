@@ -1,21 +1,13 @@
+/* IMPORTANT:
+ * The following preprocessing flags are added to 
+ * avoid compilation error when this headers are included in more than 1 times 
+ */
 #ifndef RR_GRAPH_H
 #define RR_GRAPH_H
 
-/* A Context is collection of state relating to a particular part of VPR
- *
- * This is a base class who's only purpose is to disable copying of contexts.
- * This ensures that attempting to use a context by value (instead of by reference)
- * will result in a compilation error.
- *
- * No data or member functions should be defined in this class!
- */
-struct Context {
-    //Contexts are non-copyable
-    Context() = default;
-    Context(Context&) = delete;
-    Context& operator=(Context&) = delete;
-    virtual ~Context() = default;
-};
+#include "context.h"
+#include "device_grid.h"
+#include "chan_width.h"
 
 enum e_rr_graph_type {
     GRAPH_GLOBAL, /* One node per channel with wire capacity > 1 and full connectivity */
@@ -26,16 +18,6 @@ enum e_rr_graph_type {
 };
 typedef enum e_rr_graph_type t_rr_graph_type;
 
-/* Channel width data */
-struct t_chan_width {
-	int max = 0;
-	int x_max = 0;
-	int y_max = 0;
-	int x_min = 0;
-	int y_min = 0;
-    std::vector<int> x_list;
-	std::vector<int> y_list;
-};
 
 typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_rr_node_indices; //[0..num_rr_types-1][0..grid_width-1][0..grid_height-1][0..NUM_SIDES-1][0..max_ptc-1]
 
@@ -108,7 +90,7 @@ class t_rr_graph : public Context {
   public: 
     /* Basic data read/write function */
     t_rr_graph_type type() const { return type_; }
-    t_rr_graph_type mutable_type {return type_; }
+    t_rr_graph_type mutable_type() { return type_; }
 
   private: 
     /* Type of rr_graph */
