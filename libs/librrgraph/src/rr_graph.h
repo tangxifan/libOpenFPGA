@@ -6,8 +6,8 @@
 #define RR_GRAPH_H
 
 #include "context.h"
-#include "device_grid.h"
 #include "chan_width.h"
+#include "rr_indexed_data.h"
 
 enum e_rr_graph_type {
     GRAPH_GLOBAL, /* One node per channel with wire capacity > 1 and full connectivity */
@@ -30,67 +30,29 @@ class t_rr_graph : public Context {
   public:
     /* Methods to create/free/access/modify each member */
 
-    /* Constructor for routing channels */
-    void init_chan(const DeviceGrid& grid, int cfactor, t_chan_width_dist chan_width_dist) {
+    int get_max_chan_width();
 
-    /* Useful functions to get a wanted rr_node */
-    /* Generic function to get the index of a rr_node */
-    int get_rr_node_index(const DeviceGrid& grid, int x, int y, t_rr_type rr_type, int ptc, e_side side);
-    /* Function to get the index of a rr_node whose type is CHANX or CHANY */
-    int get_chan_rr_node_index(const DeviceGrid& grid, int x, int y, t_rr_type chan_rr_type, int ptc);
-    /* Function to get the index of a rr_node whose type is OPIN or PIN */
-    int get_grid_pin_rr_node_index(const DeviceGrid& grid, int x, int y, t_rr_type pin_rr_type, int ptc, e_side side);
-    /* Build a rr_graph */
-    void build_rr_graph(const t_graph_type graph_type, const t_arch arch);
-    /* Constructor for the look-up table of rr_node: rr_indices */
-    void alloc_rr_node_indices(const DeviceGrid& grid);
-    /* Load routing channel information for the look-up table of rr_node */
-    void load_chan_rr_indices(const int max_chan_width, const int chan_len,
-                              const int num_chans, const t_rr_type type,
-                              const t_chan_details& chan_details, int *index);
-    /* Load logic block information to the look-up table of rr_node */
-    void load_block_rr_indices(const DeviceGrid& grid, int* index);
+    /* Function related to accessing indexed data */
+    std::vector<size_t> count_rr_segment_types();
 
-    void load_rr_index_segments(const int num_segment);
+    /* Most utilized functions */
+    int seg_index_of_cblock(t_rr_type from_rr_type, int to_node);
+    int seg_index_of_sblock(int from_node, int to_node);
 
-    void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_inf,
-                                        int wire_to_ipin_switch,
-                                        enum e_base_cost_type base_cost_type);
+    /* Add timing parameters */
+    short t_rr_graph::find_create_rr_rc_data(const float R, const float C);
+    void add_C_from_switches(int maxlen, float C_ipin_cblock);
 
-    void load_rr_indexed_data_T_values(const DeviceGrid& grid, int index_start,
-                                       int num_indices_to_load, t_rr_type rr_type);
-
-    void load_rr_indexed_data_base_costs(enum e_base_cost_type base_cost_type);
-
-    void alloc_and_load_rr_switch_inf(const float R_minW_nmos, const float R_minW_pmos,
-                                        const int wire_to_arch_ipin_switch, int *wire_to_rr_ipin_switch);
-
-    void load_rr_switch_inf(const float R_minW_nmos, const float R_minW_pmos) {
-
-    void load_rr_switch_inf(const int num_arch_switches, const float R_minW_nmos, const float R_minW_pmos) {
-
-    void load_rr_switch_from_arch_switch(int arch_switch_idx, int rr_switch_idx,
-                                         int fanin, const float R_minW_nmos, const float R_minW_pmos) {
-
-    void remap_rr_node_switch_indices();
-
-    /* Partition the rr graph edges for efficient access to configurable/non-configurable
-     * edge subsets. Must be done after RR switches have been allocated
-     */
+    /* RR graph edges */
     void partition_rr_graph_edges();
 
-    void add_rr_graph_C_from_switches(float C_ipin_cblock);
-
-    /* Check if the rr_graph is correct after allocation */
-    void check_rr_graph(const t_graph_type graph_type,
-                        const DeviceGrid& grid,
-                        const t_type_ptr types);
     /* Output a rr_graph into a file */
-    void dump_rr_graph(const char *file_name);
   public: 
     /* Basic data read/write function */
     t_rr_graph_type type() const { return type_; }
     t_rr_graph_type mutable_type() { return type_; }
+    t_rr_graph_type get_type() { return type_; }
+    void            set_type(t_rr_graph_type tmp) { type_ = tmp; return; }
 
   private: 
     /* Type of rr_graph */
