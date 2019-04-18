@@ -42,9 +42,14 @@ class t_rr_graph : public Context {
     /* Add timing parameters */
     short t_rr_graph::find_create_rr_rc_data(const float R, const float C);
     void add_C_from_switches(int maxlen, float C_ipin_cblock);
+    
+    /* utilized function for build a global rr_graph */
+    void update_global_rr_graph_capacity();
 
     /* RR graph edges */
+    void init_rr_nodes_fan_in();
     void partition_rr_graph_edges();
+    void alloc_and_load_edges(const t_rr_edge_info_set& rr_edges_to_create);
 
     /* Output a rr_graph into a file */
   public: 

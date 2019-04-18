@@ -1,5 +1,3 @@
-#include "vpr_error.h"
-
 #include "rr_graph.h"
 
 /* Member functions of "t_rr_graph" */
@@ -33,4 +31,25 @@ int t_rr_graph::get_max_chan_width() {
 
     return max_chan_width;
 }
+
+void t_rr_graph::init_rr_nodes_fan_in() {
+  //Loads fan-ins for all nodes
+
+  //Reset all fan-ins to zero
+  for (size_t inode = 0; inode < this->rr_nodes_.size(); ++inode) {
+    this->rr_nodes_[i].set_fan_in(0);
+  }
+
+  //Walk the graph and increment fanin on all downstream nodes
+  for (size_t inode = 0; inode < this->rr_nodes_.size(); ++inode) {
+    for (size_t iedge = 0; iedge < this->rr_nodes_[i].num_edges(); ++iedge) {
+      size_t to_node = this->rr_nodes_[i].edge_sink_node(iedge);
+
+      this->rr_nodes_[to_node].set_fan_in(this->rr_nodes_[to_node].fan_in() + 1);
+    }
+  }
+
+  return;
+}
+
 
