@@ -1,6 +1,8 @@
+#include <algorithm> 
+#include <vector>
+
 #include "rr_node.h"
-#include "globals.h"
-#include "vpr_error.h"
+#include "rr_graph_error.h"
 
 /* Member function of "t_rr_node" used to retrieve a routing *
  * resource type string by its index, which is defined by           *
@@ -32,21 +34,21 @@ short t_rr_node::ptc_num() const {
 
 short t_rr_node::pin_num() const {
     if (type() != IPIN && type() != OPIN) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to access RR node 'pin_num' for non-IPIN/OPIN type '%s'", type_string());
     }
     return ptc_.pin_num;
 }
 
 short t_rr_node::track_num() const {
     if (type() != CHANX && type() != CHANY) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to access RR node 'track_num' for non-CHANX/CHANY type '%s'", type_string());
     }
     return ptc_.track_num;
 }
 
 short t_rr_node::class_num() const {
     if (type() != SOURCE && type() != SINK) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to access RR node 'class_num' for non-SOURCE/SINK type '%s'", type_string());
     }
     return ptc_.class_num;
 }
@@ -69,7 +71,7 @@ short t_rr_node::fan_in() const {
 
 e_direction t_rr_node::direction() const {
     if (type() != CHANX && type() != CHANY) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to access RR node 'direction' for non-channel type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to access RR node 'direction' for non-channel type '%s'", type_string());
     }
 	return dir_side_.direction;
 }
@@ -89,7 +91,7 @@ const char* t_rr_node::direction_string() const{
 
 e_side t_rr_node::side() const {
     if (type() != IPIN && type() != OPIN) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to access RR node 'side' for non-IPIN/OPIN type '%s'", type_string());
     }
 	return dir_side_.side;
 }
@@ -98,56 +100,9 @@ const char* t_rr_node::side_string() const {
     return SIDE_STRING[side()];
 }
 
-
 //Returns the max 'length' over the x or y direction
 short t_rr_node::length() const {
 	return std::max(yhigh_ - ylow_, xhigh_ - xlow_);
-}
-
-bool t_rr_node::edge_is_configurable(short iedge) const {
-    auto iswitch =  edge_switch(iedge);
-
-    auto& device_ctx = g_vpr_ctx.device();
-
-    return device_ctx.rr_switch_inf[iswitch].configurable();
-}
-
-float t_rr_node::R() const {
-    auto& device_ctx = g_vpr_ctx.device();
-    return device_ctx.rr_rc_data[rc_index()].R;
-}
-
-float t_rr_node::C() const {
-    auto& device_ctx = g_vpr_ctx.device();
-    return device_ctx.rr_rc_data[rc_index()].C;
-}
-
-bool t_rr_node::validate() const {
-    //Check internal assumptions about RR node are valid
-
-    if (num_edges_ > edges_capacity_) {
-        VPR_THROW(VPR_ERROR_ROUTE, "RR Node number of edges exceeded edge capacity");
-    }
-
-    short iedge = 0;
-    for (auto edge : edges()) {
-        if (edge < num_configurable_edges()) {
-            if (!edge_is_configurable(edge)) {
-                VPR_THROW(VPR_ERROR_ROUTE, "RR Node non-configurable edge found in configurable edge list");
-            }
-        } else {
-            if (edge_is_configurable(edge)) {
-                VPR_THROW(VPR_ERROR_ROUTE, "RR Node configurable edge found in non-configurable edge list");
-            }
-        }
-        ++iedge;
-    }
-
-    if (iedge != num_edges()) {
-        VPR_THROW(VPR_ERROR_ROUTE, "RR Node Edge iteration does not match edge size");
-    }
-
-    return true;
 }
 
 void t_rr_node::set_type(t_rr_type new_type) {
@@ -182,21 +137,21 @@ void t_rr_node::set_ptc_num(short new_ptc_num) {
 
 void t_rr_node::set_pin_num(short new_pin_num) {
     if (type() != IPIN && type() != OPIN) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to set RR node 'pin_num' for non-IPIN/OPIN type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to set RR node 'pin_num' for non-IPIN/OPIN type '%s'", type_string());
     }
     ptc_.pin_num = new_pin_num;
 }
 
 void t_rr_node::set_track_num(short new_track_num) {
     if (type() != CHANX && type() != CHANY) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to set RR node 'track_num' for non-CHANX/CHANY type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to set RR node 'track_num' for non-CHANX/CHANY type '%s'", type_string());
     }
     ptc_.track_num = new_track_num;
 }
 
 void t_rr_node::set_class_num(short new_class_num) {
     if (type() != SOURCE && type() != SINK) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to set RR node 'class_num' for non-SOURCE/SINK type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to set RR node 'class_num' for non-SOURCE/SINK type '%s'", type_string());
     }
     ptc_.class_num = new_class_num;
 }
@@ -224,7 +179,7 @@ short t_rr_node::add_edge(int sink_node, int iswitch) {
 
         constexpr size_t MAX_EDGE_COUNT = std::numeric_limits<decltype(edges_capacity_)>::max();
         if (edges_capacity_ == MAX_EDGE_COUNT) {
-            VPR_THROW(VPR_ERROR_ROUTE, "Maximum RR Node out-edge count (%zu) exceeded", MAX_EDGE_COUNT);
+            RR_GRAPH_THROW("Maximum RR Node out-edge count (%zu) exceeded", MAX_EDGE_COUNT);
         }
 
         //Grow
@@ -262,25 +217,6 @@ void t_rr_node::shrink_to_fit() {
     edges_capacity_ = num_edges_;
 }
 
-void t_rr_node::partition_edges() {
-    auto& device_ctx = g_vpr_ctx.device();
-    auto is_configurable = [&](const t_rr_edge& edge) {
-        auto iswitch =  edge.switch_id;
-        return device_ctx.rr_switch_inf[iswitch].configurable();
-    };
-
-    //Partition the edges so the first set of edges are all configurable, and the later are not
-    auto first_non_config_edge = std::partition(edges_.get(), edges_.get() + num_edges_, is_configurable);
-
-    size_t num_conf_edges = std::distance(edges_.get(), first_non_config_edge);
-    size_t num_non_conf_edges = num_edges() - num_conf_edges; //Note we calculate using the size_t to get full range
-
-    //Check that within allowable range (no overflow when stored as num_non_configurable_edges_
-    if (num_non_conf_edges > std::numeric_limits<decltype(num_non_configurable_edges_)>::max()) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Exceeded RR node maximum number of non-configurable edges");
-    }
-    num_non_configurable_edges_ = num_non_conf_edges; //Narrowing
-}
 
 void t_rr_node::set_num_edges(short new_num_edges) {
     VTR_ASSERT(new_num_edges >= 0);
@@ -290,16 +226,24 @@ void t_rr_node::set_num_edges(short new_num_edges) {
     edges_ = std::make_unique<t_rr_edge[]>(num_edges_);
 }
 
+/* A mutator function to set the number of non configurable edges for a rr_node */
+void t_rr_node::set_num_non_configurable_edges(short new_num_non_conf_edges) {
+  num_non_configurable_edges_ = new_num_non_conf_edges;
+
+  return;
+}
+
+
 void t_rr_node::set_direction(e_direction new_direction) {
     if (type() != CHANX && type() != CHANY) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to set RR node 'direction' for non-channel type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to set RR node 'direction' for non-channel type '%s'", type_string());
     }
 	dir_side_.direction = new_direction;
 }
 
 void t_rr_node::set_side(e_side new_side) {
     if (type() != IPIN && type() != OPIN) {
-        VPR_THROW(VPR_ERROR_ROUTE, "Attempted to set RR node 'side' for non-channel type '%s'", type_string());
+        RR_GRAPH_THROW("Attempted to set RR node 'side' for non-channel type '%s'", type_string());
     }
 	dir_side_.side = new_side;
 }
@@ -310,15 +254,108 @@ void t_rr_node::set_edge_sink_node(short iedge, int sink_node) {
     edges_[iedge].sink_node = sink_node;
 }
 
-void t_rr_node::set_edge_switch(short iedge, short switch_index) {
+void t_rr_node::set_edge_switch(short iedge, short switch_index, std::vector<t_rr_switch_inf> switch_list) {
     VTR_ASSERT(iedge < num_edges());
     VTR_ASSERT(switch_index >= 0);
     edges_[iedge].switch_id = switch_index;
+    /* Assign the pointer */
+    edges_[iedge].switch_inf_ptr = switch_list.data() + switch_index;
+}
+
+/* This function aims to identify an edge of a rr_node is configurable
+ * Previous this function is a member of t_rr_node 
+ * However, it really depends on a data structure rr_switch_inf in rr_graph
+ * Therefore, it is more suitable to change it to a member function of rr_graph  
+ */
+bool t_rr_node::edge_is_configurable(short iedge) const {
+  return edges_[iedge].switch_inf_ptr->configurable();
+}
+
+/* This function aims to get the resistance of a rr_node 
+ * Previous this function is a member of t_rr_node 
+ * However, it really depends on a data structure rr_rc_data in rr_graph
+ * Therefore, it is more suitable to change it to a member function of rr_graph  
+ */
+float t_rr_node::R() const {
+  return rc_data_ptr->R;
+}
+
+/* This function aims to get the capacitance of a rr_node 
+ * Previous this function is a member of t_rr_node 
+ * However, it really depends on a data structure rr_rc_data in rr_graph
+ * Therefore, it is more suitable to change it to a member function of rr_graph  
+ */
+float t_rr_node::C() const {
+  return rc_data_ptr->C;
+}
+
+/* This function aims to check if the internal assumption of a rr_node is reasonable
+ * Previous this function is a member of t_rr_node 
+ * However, it really depends on a data structure rr_rc_data in rr_graph
+ * Therefore, it is more suitable to change it to a member function of rr_graph  
+ */
+bool t_rr_node::validate() const {
+  //Check internal assumptions about RR node are valid
+
+  if (num_edges_ > edges_capacity_) {
+    RR_GRAPH_THROW("RR Node number of edges exceeded edge capacity");
+  }
+
+  short iedge = 0;
+  for (auto edge : edges()) {
+    if (edge < num_configurable_edges()) {
+      if (false == edge_is_configurable(edge)) {
+        RR_GRAPH_THROW("RR Node non-configurable edge found in configurable edge list");
+      }
+    } else {
+      if (true == edge_is_configurable(edge)) {
+        RR_GRAPH_THROW("RR Node configurable edge found in non-configurable edge list");
+      }
+    }
+    ++iedge;
+  }
+
+  if (iedge != num_edges()) {
+    RR_GRAPH_THROW("RR Node Edge iteration does not match edge size");
+  }
+
+  return true;
+}
+
+/* This function aims to partition edges of a rr_node in the graph 
+ * Partitions all edges so that configurable and non-configurable edges
+ * are organized for efficient access.
+ * 
+ * Must be called before configurable_edges(), non_configurable_edges(),
+ * num_configurable_edges(), num_non_configurable_edges() to ensure they
+ * are correct.
+ *
+ * Previous this function is a member of t_rr_node 
+ * However, it really depends on a data structure rr_rc_data in rr_graph
+ * Therefore, it is more suitable to change it to a member function of rr_graph  
+ */
+void t_rr_node::partition_edges() {
+  auto is_configurable = [&](const t_rr_edge& edge) {
+    return edge.switch_inf_ptr->configurable();
+  };
+
+  //Partition the edges so the first set of edges are all configurable, and the later are not
+  auto first_non_config_edge = std::partition(edges_.get(), 
+                                              edges_.get() + num_edges_, 
+                                              is_configurable);
+
+  size_t num_conf_edges = std::distance(edges_.get(), first_non_config_edge);
+  size_t num_non_conf_edges = num_edges_ - num_conf_edges; //Note we calculate using the size_t to get full range
+
+  //Check that within allowable range (no overflow when stored as num_non_configurable_edges_
+  if (num_non_conf_edges > std::numeric_limits<decltype(num_non_configurable_edges_)>::max()) {
+    RR_GRAPH_THROW("Exceeded RR node maximum number of non-configurable edges");
+  }
+  num_non_configurable_edges_ = num_non_conf_edges; //Narrowing
 }
 
 t_rr_rc_data::t_rr_rc_data(float Rval, float Cval)
     : R(Rval)
     , C(Cval)
     {}
-
 

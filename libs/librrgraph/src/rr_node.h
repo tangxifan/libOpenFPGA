@@ -24,6 +24,34 @@ typedef enum e_rr_type : unsigned char {
 	SOURCE = 0, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
 } t_rr_type;
 
+constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename { {
+	"SOURCE", "SINK", "IPIN", "OPIN", "CHANX", "CHANY", "INTRA_CLUSTER_EDGE"
+} };
+
+
+/*
+ * Reistance/Capacitance data for an RR Nodes
+ *
+ * In practice many RR nodes have the same values, so they are fly-weighted
+ * to keep t_rr_node small. Each RR node holds an rc_index which allows
+ * retrieval of it's RC data.
+ *
+ * R:  Resistance to go through an RR node.  This is only metal
+ *     resistance (end to end, so conservative) -- it doesn't include the
+ *     switch that leads to another rr_node.
+ * C:  Total capacitance of an RR node.  Includes metal capacitance, the
+ *     input capacitance of all switches hanging off the node, the
+ *     output capacitance of all switches to the node, and the connection
+ *     box buffer capacitances hanging off it.
+ */
+struct t_rr_rc_data {
+    t_rr_rc_data(float Rval, float Cval);
+
+    float R;
+    float C;
+};
+
+
 
 /* Directionality of a Routing Resource Node (rr_node)
  * Directionality is only applicable to rr_node whose type is 
@@ -118,13 +146,15 @@ class t_rr_node {
         edge_idx_range non_configurable_edges() const { return vtr::make_range(edge_idx_iterator(num_edges() - num_non_configurable_edges()), edge_idx_iterator(num_edges())); }
 
         short num_edges() const { return num_edges_; }
+        short edges_capacity() const { return edges_capacity_; }
+
+        bool  edge_is_configurable() const;
         short num_configurable_edges() const { return num_edges() - num_non_configurable_edges(); }
         short num_non_configurable_edges() const { return num_non_configurable_edges_; }
 
         int edge_sink_node(short iedge) const { VTR_ASSERT_SAFE(iedge < num_edges()); return edges_[iedge].sink_node; }
         short edge_switch(short iedge) const { VTR_ASSERT_SAFE(iedge < num_edges()); return edges_[iedge].switch_id; }
 
-        bool edge_is_configurable(short iedge) const;
         short fan_in() const;
 
         short xlow() const;
@@ -151,6 +181,7 @@ class t_rr_node {
         float R() const;
         float C() const;
 
+        bool edge_is_configurable(short iedge) const;
         bool validate() const;
 
     public: //Mutators
@@ -160,18 +191,10 @@ class t_rr_node {
 
         void shrink_to_fit();
 
-        //Partitions all edges so that configurable and non-configurable edges
-        //are organized for efficient access.
-        //
-        //Must be called before configurable_edges(), non_configurable_edges(),
-        //num_configurable_edges(), num_non_configurable_edges() to ensure they
-        //are correct.
-        void partition_edges();
-
-
         void set_num_edges(short); //Note will remove any previous edges
+        void set_num_non_configurable_edges(short); //Note will remove any previous edges
         void set_edge_sink_node(short iedge, int sink_node);
-        void set_edge_switch(short iedge, short switch_index);
+        void set_edge_switch(short iedge, short switch_index, std::vector<t_rr_switch_inf> switch_list);
 
         void set_fan_in(short);
 
@@ -191,12 +214,21 @@ class t_rr_node {
         void set_direction(e_direction);
         void set_side(e_side);
 
-    private: //Types
+        void set_edge_switch_inf_ptr(std::vector<t_rr_switch_inf>);
+
+        void partition_edges();
+
+    private: //Types: this type should be used by rr_graph, so it is a public one now.
         //The edge information is stored in a structure to economize on the number of pointers held
         //by t_rr_node (to save memory), and is not exposed externally
         struct t_rr_edge {
             int sink_node = -1; //The ID of the sink RR node associated with this edge
             short switch_id = -1; //The ID of the switch type this edge represents
+            /* Using switch ID causes that we have to access a data structure arch_switch which is out of t_rr_node 
+             * when we need some information about the switch 
+             * Using a constant pointer allows we access any switch info much easier 
+             */
+            t_rr_switch_inf* switch_inf_ptr = nullptr; 
         };
 
     private: //Data
@@ -209,6 +241,11 @@ class t_rr_node {
 
         int8_t cost_index_ = -1;
         int16_t rc_index_ = -1;
+        /* Using switch ID causes that we have to access a data structure arch_switch which is out of t_rr_node 
+         * when we need some information about the switch 
+         * Using a constant pointer allows we access any switch info much easier 
+         */
+        t_rr_rc_data* rc_data_ptr = nullptr;
 
         int16_t xlow_ = -1;
         int16_t ylow_ = -1;
@@ -229,38 +266,5 @@ class t_rr_node {
         uint16_t fan_in_ = 0;
         uint16_t capacity_ = 0;
 };
-
-
-/*
- * Reistance/Capacitance data for an RR Nodes
- *
- * In practice many RR nodes have the same values, so they are fly-weighted
- * to keep t_rr_node small. Each RR node holds an rc_index which allows
- * retrieval of it's RC data.
- *
- * R:  Resistance to go through an RR node.  This is only metal
- *     resistance (end to end, so conservative) -- it doesn't include the
- *     switch that leads to another rr_node.
- * C:  Total capacitance of an RR node.  Includes metal capacitance, the
- *     input capacitance of all switches hanging off the node, the
- *     output capacitance of all switches to the node, and the connection
- *     box buffer capacitances hanging off it.
- */
-struct t_rr_rc_data {
-    t_rr_rc_data(float Rval, float Cval);
-
-    float R;
-    float C;
-};
-
-/*
- * Returns the index to a t_rr_rc_data matching the specified values.
- *
- * If an existing t_rr_rc_data matches the specified R/C it's index
- * is returned, otherwise the t_rr_rc_data is created.
- *
- * The returned indicies index into DeviceContext.rr_rc_data.
- */
-short find_create_rr_rc_data(const float R, const float C);
 
 #endif

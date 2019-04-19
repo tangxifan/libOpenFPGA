@@ -6,7 +6,14 @@
 #include "rr_graph.h"
 
 /****************** Subroutine definitions *********************************/
-
+/*
+ * Returns the index to a t_rr_rc_data matching the specified values.
+ *
+ * If an existing t_rr_rc_data matches the specified R/C it's index
+ * is returned, otherwise the t_rr_rc_data is created.
+ *
+ * The returned indicies index into DeviceContext.rr_rc_data.
+ */
 short t_rr_graph::find_create_rr_rc_data(const float R, const float C) {
 
     auto match = [&](const t_rr_rc_data& val) {
@@ -210,7 +217,7 @@ void t_rr_graph::add_C_from_switches(int max_len, float C_ipin_cblock) {
 
     //Create the final flywieghted t_rr_rc_data
   for (size_t inode = 0; inode < this->rr_nodes_.size(); inode++) {
-        this->rr_nodes_[inode].set_rc_index(t_rr_graph::find_create_rr_rc_data(this->rr_nodes_[inode].R(), rr_node_C[inode]));
+        this->rr_nodes_[inode].set_rc_index(t_rr_graph::find_create_rr_rc_data(rr_nodes_[inode].R(), rr_node_C[inode]));
     }
 
   free(Couts_to_add);

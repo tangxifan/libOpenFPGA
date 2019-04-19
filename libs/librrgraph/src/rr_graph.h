@@ -74,8 +74,8 @@ namespace std {
  */
 class t_rr_graph {
   public: 
-    void build_global_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
-    void build_detailed_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
+    void build_global_rr_graph(); 
+    void build_detail_rr_graph(); 
     void dump_rr_graph_to_file();
     void read_rr_graph_from_file();
   private: /* Functions should only be accessible by public functions */
@@ -101,6 +101,13 @@ class t_rr_graph {
     void init_rr_nodes_fan_in();
     void partition_rr_graph_edges();
     void alloc_and_load_edges(const t_rr_edge_info_set& rr_edges_to_create);
+
+    /* rr_metadata */
+    const t_metadata_value* find_rr_node_metadata(int src_node, std::string key);
+    void add_rr_node_metadata(int src_node, std::string key, std::string value);
+    const t_metadata_value* find_rr_edge_metadata(int src_node, int sink_id, short switch_id, std::string key);
+    void add_rr_edge_metadata(int src_node, int sink_id, short switch_id, 
+                              std::string key, std::string value);
 
     /* Output a rr_graph into a file */
   public: 

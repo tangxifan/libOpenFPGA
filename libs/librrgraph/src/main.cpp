@@ -12,6 +12,7 @@
 #include "vtr_memory.h"
 #include "read_xml_arch_file.h"
 #include "echo_arch.h"
+#include "rr_graph.h"
 
 void print_help() {
   printf("\n---------------------------------------------------------------------------------------\n");
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
     printf("Reading in architecture\n");
 
     /* Read architecture XML and build_rr_graph options */
-    t_arch* arch = (t_arch*) vtr:calloc(1, sizeof(t_arch));
+    t_arch* arch = (t_arch*) vtr::calloc(1, sizeof(t_arch));
     t_type_descriptor* types = NULL;
     int numTypes;
 
@@ -56,12 +57,14 @@ int main(int argc, char **argv) {
 
     EchoArch(argv[3], types, numTypes, arch);
 
+    /* Build the grid */
+
     /* Build rr_graph  */
     t_rr_graph rr_graph;
-    rr_graph.build_rr_graph(arch, grid);
+    rr_graph.build_detail_rr_graph();
 
     /* Optional: dump the built rr_graph  */
-    rr_graph.dump_rr_graph();
+    rr_graph.dump_rr_graph_to_file();
 
     /* Deconstruct and free */
     free(arch);

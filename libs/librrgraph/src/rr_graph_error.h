@@ -14,4 +14,12 @@ class RRGraphError : public vtr::VtrError {
             : vtr::VtrError(msg, new_filename, new_linenumber){}
 };
 
+/*
+ * Macro wrapper around rr_graph_throw() which automatically
+ * specifies file and line number of call site.
+ */
+#define RR_GRAPH_THROW(...) do { \
+        rr_graph_throw(__FILE__, __LINE__, __VA_ARGS__); \
+    } while(false)
+
 #endif
