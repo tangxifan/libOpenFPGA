@@ -1,8 +1,10 @@
 #ifndef RR_NODE_H
 #define RR_NODE_H
-#include "side.h"
+
 
 #include "vtr_range.h"
+
+#include "arch_types.h"
 
 #include <memory>
 #include <cstdint>
@@ -22,14 +24,6 @@ typedef enum e_rr_type : unsigned char {
 	SOURCE = 0, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
 } t_rr_type;
 
-/* Constant expression to save memory */
-constexpr std::array<t_rr_type, NUM_RR_TYPES> RR_TYPES = { {
-	SOURCE, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE
-} };
-/* Constant expression to ease print log files */
-constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename { {
-	"SOURCE", "SINK", "IPIN", "OPIN", "CHANX", "CHANY", "INTRA_CLUSTER_EDGE"
-} };
 
 /* Directionality of a Routing Resource Node (rr_node)
  * Directionality is only applicable to rr_node whose type is 

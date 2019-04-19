@@ -1,6 +1,7 @@
 #include <cstdio>
+#include <algorithm>
 
-#include "vpr_error.h"
+#include "vtr_memory.h"
 
 #include "rr_graph.h"
 
@@ -22,7 +23,7 @@ short t_rr_graph::find_create_rr_rc_data(const float R, const float C) {
         //Note found -> create it
         this->rr_rc_data_.emplace_back(R, C);
 
-        itr = --this->.rr_rc_data_.end(); //Iterator to inserted value
+        itr = --this->rr_rc_data_.end(); //Iterator to inserted value
     }
 
     return std::distance(this->rr_rc_data_.begin(), itr);
@@ -109,7 +110,7 @@ void t_rr_graph::add_C_from_switches(int max_len, float C_ipin_cblock) {
               rr_node_C[to_node] += Cout;
             }
             isblock = t_rr_graph::seg_index_of_sblock(inode, to_node);
-            buffer_Cin[isblock] = max(buffer_Cin[isblock], Cin);
+            buffer_Cin[isblock] = std::max(buffer_Cin[isblock], Cin);
           }
 
         }

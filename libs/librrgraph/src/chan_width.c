@@ -1,8 +1,60 @@
-#include "chan_width.h"
 #include "device_grid.h"
-#include "physical_types.h"
+#include "arch_types.h"
+#include "chan_width.h"
 
 /* Embodiment Functions for class t_chan_width */
+static float comp_width(t_chan * chan, float x, float separation) {
+
+    /* Return the relative channel density.  *chan points to a channel   *
+     * functional description data structure, and x is the distance      *
+     * (between 0 and 1) we are across the chip.  separation is the      *
+     * distance between two channels, in the 0 to 1 coordinate system.   */
+
+    float val;
+
+    switch (chan->type) {
+
+        case UNIFORM:
+            val = chan->peak;
+            break;
+
+        case GAUSSIAN:
+            val = (x - chan->xpeak) * (x - chan->xpeak)
+                    / (2 * chan->width * chan->width);
+            val = chan->peak * exp(-val);
+            val += chan->dc;
+            break;
+
+        case PULSE:
+            val = (float) fabs((double) (x - chan->xpeak));
+            if (val > chan->width / 2.) {
+                val = 0;
+            } else {
+                val = chan->peak;
+            }
+            val += chan->dc;
+            break;
+
+        case DELTA:
+            val = x - chan->xpeak;
+            if (val > -separation / 2. && val <= separation / 2.)
+                val = chan->peak;
+            else
+                val = 0.;
+            val += chan->dc;
+            break;
+
+        default:
+            vpr_throw(VPR_ERROR_ROUTE, __FILE__, __LINE__,
+                    "in comp_width: Unknown channel type %d.\n", chan->type);
+            val = OPEN;
+            break;
+    }
+
+    return (val);
+}
+
+
 /* Constructor for routing channels */
 void t_chan_width::init(const DeviceGrid& grid, 
                         int cfactor, 

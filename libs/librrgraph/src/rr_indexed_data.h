@@ -27,11 +27,10 @@
  *               segments.                                                   *
  * C_load:  Load capacitance seen by the driver for each segment added to    *
  *          the chain driven by the driver.  0 for buffered segments.        */
-class t_rr_indexed_data : public Context{
+class t_rr_indexed_data {
   /* Methods to create/free/access/modify each member */
   public:
     /* Constructors */
-    t_rr_indexed_data(0., 0., -1, -1, 0., 0., 0., 0.);
     void init(float, float, int, int, float, float, float);
 
     /* Basic data read/write function */ 
@@ -45,7 +44,7 @@ class t_rr_indexed_data : public Context{
     float get_saved_base_cost() { return saved_base_cost_; }    
     void  set_saved_base_cost(float tmp) { saved_base_cost_ = tmp; return; }
 
-    int  ortho_cost_index() const { return ortho_base_index_; }
+    int  ortho_cost_index() const { return ortho_cost_index_; }
     int  mutable_ortho_cost_index() { return ortho_cost_index_; }    
     int  get_ortho_cost_index() { return ortho_cost_index_; }    
     void set_ortho_cost_index(int tmp) { ortho_cost_index_ = tmp; return; }

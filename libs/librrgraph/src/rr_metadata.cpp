@@ -1,9 +1,5 @@
 #include "rr_metadata.h"
 
-#include "globals.h"
-
-namespace vpr {
-
 const t_metadata_value* rr_node_metadata(int src_node, std::string key) {
     auto& device_ctx = g_vpr_ctx.device();
 
@@ -46,4 +42,3 @@ void add_rr_edge_metadata(int src_node, int sink_id, short switch_id, std::strin
     data.add(key, value);
 }
 
-} // namespace vpr
