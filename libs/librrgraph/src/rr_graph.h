@@ -2,23 +2,20 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef RR_GRAPH_H
-#define RR_GRAPH_H
+#ifndef RR_GRAPH_OBJ_H
+#define RR_GRAPH_OBJ_H
 
-#include <unordered_map>
-#include <vector>
-#include <memory>
-#include <tuple>
-#include <unordered_map>
+#include <limits>
 
+#include "rr_graph_fwd.h"
 #include "vtr_vector.h"
-#include "chan_width.h"
+#include "vtr_range.h"
+#include "vtr_geometry.h"
 #include "arch_types.h"
-#include "rr_indexed_data.h"
-#include "rr_node.h"
+#include "rr_graph_node_types.h"
+#include "device_grid.h"
 
-#define INCLUDE_TRACK_BUFFERS false
-
+/* describe the type of a rr_graph */
 enum e_rr_graph_type {
     GRAPH_GLOBAL, /* One node per channel with wire capacity > 1 and full connectivity */
     GRAPH_BIDIR, /* Detailed bidirectional graph */
@@ -28,138 +25,201 @@ enum e_rr_graph_type {
 };
 typedef enum e_rr_graph_type t_rr_graph_type;
 
-/* Uncomment lines below to save some memory, at the cost of debugging ease. */
-/*enum e_rr_type {SOURCE, SINK, IPIN, OPIN, CHANX, CHANY}; */
-/* typedef short t_rr_type */
+class RRGraph {
+  public: /* RR graph Builder*/ 
+    void build_global_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
+    void build_bidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
+    void build_unidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
+    void build_unidir_tileable_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
 
-typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_rr_node_indices; //[0..num_rr_types-1][0..grid_width-1][0..grid_height-1][0..NUM_SIDES-1][0..max_ptc-1]
+  public: /* RR graph I/Os */ 
+    void dump_rr_graph_to_file(const char* filename);
+    void read_rr_graph_from_file(const char* filename);
 
-typedef std::vector<std::map<int,int>> t_arch_switch_fanin;
+  public: //Types
+    typedef vtr::vector<RRNodeId,RRNodeId>::const_iterator node_iterator;
+    typedef vtr::vector<RREdgeId,RREdgeId>::const_iterator edge_iterator;
+    typedef vtr::vector<RRSwitchId,RRSwitchId>::const_iterator switch_iterator;
 
-struct t_rr_edge_info {
-    t_rr_edge_info(int from, int to, short type)
-        : from_node(from), to_node(to), switch_type(type) {}
+    typedef vtr::Range<node_iterator> node_range;
+    typedef vtr::Range<edge_iterator> edge_range;
+    typedef vtr::Range<switch_iterator> switch_range;
 
-    int from_node = OPEN;
-    int to_node = OPEN;
-    short switch_type = OPEN;
+  public: //Accessors
+    /* Graph type */
+    t_rr_graph_type type() const;
 
-    friend bool operator<(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) <
-               std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
-    }
+    //Aggregates
+    node_range nodes() const;
+    edge_range edges() const;
+    switch_range switches() const;
 
-    friend bool operator==(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) ==
-               std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
-    }
-};
+    //Node attributes
+    t_rr_type node_type(RRNodeId node) const;
 
-typedef std::vector<t_rr_edge_info> t_rr_edge_info_set;
+    short node_xlow(RRNodeId node) const;
+    short node_ylow(RRNodeId node) const;
+    short node_xhigh(RRNodeId node) const;
+    short node_yhigh(RRNodeId node) const;
+    short node_length(RRNodeId node) const;
+    vtr::Rect<short> node_bounding_box(RRNodeId node) const;
 
-namespace std {
-    template <>
-    struct hash<std::tuple<int, int, short>> {
-        std::size_t operator()(const std::tuple<int, int, short>& ok) const noexcept {
-            std::size_t seed = std::hash<int>{}(std::get<0>(ok));
-            vtr::hash_combine(seed, std::get<1>(ok));
-            vtr::hash_combine(seed, std::get<2>(ok));
-            return seed;
-        }
-    };
-}
+    short node_capacity(RRNodeId node) const;
+    short node_fan_in(RRNodeId node) const;
+    short node_fan_out(RRNodeId node) const;
 
-/* Class for a Routing Resource Graph
- * 
- */
-class t_rr_graph {
-  public: 
-    void build_global_rr_graph(); 
-    void build_detail_rr_graph(); 
-    void dump_rr_graph_to_file();
-    void read_rr_graph_from_file();
-  private: /* Functions should only be accessible by public functions */
-    /* Methods to create/free/access/modify each member */
+    short node_ptc_num(RRNodeId node) const;
+    short node_pin_num(RRNodeId node) const;
+    short node_track_num(RRNodeId node) const;
+    short node_class_num(RRNodeId node) const;
 
-    int get_max_chan_width();
+    short node_cost_index(RRNodeId node) const;
+    e_direction node_direction(RRNodeId node) const;
+    e_side node_side(RRNodeId node) const;
+    float node_R(RRNodeId node) const;
+    float node_C(RRNodeId node) const;
+    short node_segment_id(RRNodeId node) const; /* get the segment id of a rr_node */
+    size_t node_net_id(RRNodeId node) const; /* get the net id of a rr_node */
 
-    /* Function related to accessing indexed data */
-    std::vector<size_t> count_rr_segment_types();
+    edge_range node_out_edges(RRNodeId node) const;
+    edge_range node_in_edges(RRNodeId node) const;
 
-    /* Most utilized functions */
-    int seg_index_of_cblock(t_rr_type from_rr_type, int to_node);
-    int seg_index_of_sblock(int from_node, int to_node);
+    //Edge attributes
+    RRNodeId edge_src_node(RREdgeId edge) const;
+    RRNodeId edge_sink_node(RREdgeId edge) const;
+    RRSwitchId edge_switch(RREdgeId edge) const;
 
-    /* Add timing parameters */
-    short find_create_rr_rc_data(const float R, const float C);
-    void add_C_from_switches(int maxlen, float C_ipin_cblock);
-    
-    /* utilized function for build a global rr_graph */
-    void update_global_rr_graph_capacity();
+    /* Switch Info */
+    t_rr_switch_inf get_switch(RRSwitchId switch_id) const;
 
-    /* RR graph edges */
-    void init_rr_nodes_fan_in();
-    void partition_rr_graph_edges();
-    void alloc_and_load_edges(const t_rr_edge_info_set& rr_edges_to_create);
+    /* Segment Info */
+    t_segment_inf get_segment(RRSegmentId segment_id) const;
 
-    /* rr_metadata */
-    const t_metadata_value* find_rr_node_metadata(int src_node, std::string key);
-    void add_rr_node_metadata(int src_node, std::string key, std::string value);
-    const t_metadata_value* find_rr_edge_metadata(int src_node, int sink_id, short switch_id, std::string key);
-    void add_rr_edge_metadata(int src_node, int sink_id, short switch_id, 
-                              std::string key, std::string value);
+    //Utilities
+    RREdgeId find_edge(RRNodeId src_node, RRNodeId sink_node) const;
+    RRNodeId find_node(short x, short y, t_rr_type type, int ptc, e_side side=NUM_SIDES) const;
+    node_range find_nodes(short x, short y, t_rr_type type, int ptc) const;
+    bool is_dirty() const;
+  public: //Mutators
+    /* RR graph type */
+    void set_type(t_rr_graph_type type);
 
-    /* Output a rr_graph into a file */
-  public: 
-    /* Basic data read/write function */
-    t_rr_graph_type type() const { return type_; }
-    t_rr_graph_type mutable_type() { return type_; }
-    t_rr_graph_type get_type() { return type_; }
-               void set_type(t_rr_graph_type tmp) { type_ = tmp; return; }
-  private: 
-    /* Type of rr_graph */
+    /* Related to Nodes */
+    RRNodeId create_node(t_rr_type type);
+    RREdgeId create_edge(RRNodeId source, RRNodeId sink, RRSwitchId switch_id);
+    RRSwitchId create_switch(t_rr_switch_inf switch_info);
+
+    void remove_node(RRNodeId node);
+    void remove_edge(RREdgeId edge);
+
+    void set_node_xlow(RRNodeId node, short xlow);
+    void set_node_ylow(RRNodeId node, short ylow);
+    void set_node_xhigh(RRNodeId node, short xhigh);
+    void set_node_yhigh(RRNodeId node, short yhigh);
+    void set_node_bounding_box(RRNodeId node, vtr::Rect<short> bb);
+
+    void set_node_capacity(RRNodeId node, short capacity);
+
+    void set_node_ptc_num(RRNodeId node, short ptc);
+    void set_node_pin_num(RRNodeId node, short pin_id);
+    void set_node_track_num(RRNodeId node, short track_id);
+    void set_node_class_num(RRNodeId node, short class_id);
+
+    void set_node_cost_index(RRNodeId node, short cost_index);
+    void set_node_direction(RRNodeId node, e_direction direction);
+    void set_node_side(RRNodeId node, e_side side);
+    void set_node_R(RRNodeId node, float R);
+    void set_node_C(RRNodeId node, float C);
+    void set_node_switch_id(RRNodeId node, short switch_index);
+    void set_node_segment_id(RRNodeId node, short segment_index);
+    void set_node_net_id(RRNodeId node, size_t net_id);
+  
+    void compress();
+    bool validate();
+  private: //Internal
+    void set_dirty();
+    void clear_dirty();
+
+    //Fast look-up
+    void build_fast_node_lookup() const;
+    void invalidate_fast_node_lookup() const;
+    bool valid_fast_node_lookup() const;
+
+    //Validation
+    bool valid_node_id(RRNodeId node) const;
+    bool valid_edge_id(RREdgeId edge) const;
+
+    bool validate_sizes() const;
+    bool validate_node_sizes() const;
+    bool validate_edge_sizes() const;
+
+    bool validate_invariants() const;
+    bool validate_unique_edges_invariant() const;
+
+    bool validate_crossrefs() const;
+    bool validate_node_edge_crossrefs() const;
+
+    /* For switch list */
+    bool valid_switch_id(RRSwitchId switch_id) const;
+
+    /* For segment list */
+    bool valid_segment_id(RRSegmentId segment_id) const;
+
+    //Compression related
+    void build_id_maps(vtr::vector<RRNodeId,RRNodeId>& node_id_map,
+                       vtr::vector<RREdgeId,RREdgeId>& edge_id_map);
+    void clean_nodes(const vtr::vector<RRNodeId,RRNodeId>& node_id_map);
+    void clean_edges(const vtr::vector<RREdgeId,RREdgeId>& edge_id_map);
+    void rebuild_node_refs(const vtr::vector<RREdgeId,RREdgeId>& edge_id_map);
+  private: //Data
+
+    /* Type of this rr_graph */
     t_rr_graph_type type_;
-  
-    /* chan_width is for x|y-directed channels; i.e. between rows */
-    t_chan_width chan_width_;
-  
-    /* Structures to define the routing architecture of the FPGA.           */
-    std::vector<t_rr_node> rr_nodes_; /* autogenerated in build_rr_graph */
-  
-    std::vector<t_rr_indexed_data> rr_indexed_data_; /* [0 .. num_rr_indexed_data-1] */
-  
-    //Fly-weighted Resistance/Capacitance data for RR Nodes
-    std::vector<t_rr_rc_data> rr_rc_data_;
-  
-    //The indicies of rr nodes of a given type at a specific x,y grid location
-    t_rr_node_indices rr_node_indices_; //[0..NUM_RR_TYPES-1][0..grid.width()-1][0..grid.width()-1][0..size-1]
-  
-    std::vector<t_rr_switch_inf> rr_switch_inf_; /* autogenerated in build_rr_graph based on switch fan-in. [0..(num_rr_switches-1)] */
-  
-    int num_arch_switches_;
-    std::vector<t_arch_switch_inf> arch_switch_inf_; /* [0..(num_arch_switches-1)] */
-  
-    /** Attributes for each rr_node.
-     * key:     rr_node index
-     * value:   map of <attribute_name, attribute_value>
-     */
-    std::unordered_map<int, t_metadata_dict> rr_node_metadata_;
-    /* Attributes for each rr_edge                                             *
-     * key:     <source rr_node_index, sink rr_node_index, iswitch>            *
-     * iswitch: Index of the switch type used to go from this rr_node to       *
-     *          the next one in the routing.  OPEN if there is no next node    *
-     *          (i.e. this node is the last one (a SINK) in a branch of the    *
-     *          net's routing).                                                *
-     * value:   map of <attribute_name, attribute_value>                       */
-    std::unordered_map<std::tuple<int, int, short>, t_metadata_dict> rr_edge_metadata_;
-  
-    /*
-     * switch_fanin_remap is only used for printing out switch fanin stats (the -switch_stats option)
-     * array index: [0..(num_arch_switches-1)];
-     * map key: num of all possible fanin of that type of switch on chip
-     * map value: remapped switch index (index in rr_switch_inf)
-     */
-    std::vector<std::map<int, int>> switch_fanin_remap_;
+
+    //Node related data
+    vtr::vector<RRNodeId,RRNodeId> node_ids_;
+    vtr::vector<RRNodeId,t_rr_type> node_types_;
+
+    vtr::vector<RRNodeId,vtr::Rect<short>> node_bounding_boxes_;
+
+    vtr::vector<RRNodeId,short> node_capacities_;
+    vtr::vector<RRNodeId,short> node_ptc_nums_;
+    vtr::vector<RRNodeId,short> node_cost_indices_;
+    vtr::vector<RRNodeId,e_direction> node_directions_;
+    vtr::vector<RRNodeId,e_side> node_sides_;
+    vtr::vector<RRNodeId,float> node_Rs_;
+    vtr::vector<RRNodeId,float> node_Cs_;
+    vtr::vector<RRNodeId,short> node_segment_ids_; /* Segment ids for each node */
+    vtr::vector<RRNodeId,size_t> node_net_ids_; /* Net ids for each node */
+
+    vtr::vector<RRNodeId,std::vector<RREdgeId>> node_in_edges_;
+    vtr::vector<RRNodeId,std::vector<RREdgeId>> node_out_edges_;
+
+    //Edge related data
+    vtr::vector<RREdgeId,RREdgeId> edge_ids_;
+    vtr::vector<RREdgeId,RRNodeId> edge_src_nodes_;
+    vtr::vector<RREdgeId,RRNodeId> edge_sink_nodes_;
+    vtr::vector<RREdgeId,RRSwitchId> edge_switches_;
+
+    //Switch related data
+    // Note that so far there has been no need to remove 
+    // switches, so no such facility exists
+    vtr::vector<RRSwitchId,RRSwitchId> switch_ids_;
+    vtr::vector<RRSwitchId,t_rr_switch_inf> switches_;
+
+    /* Segment relatex data 
+     * Segment info should be corrected annotated for each rr_node
+     * whose type is CHANX and CHANY
+     */   
+    vtr::vector<RRSegmentId,RRSegmentId> segment_ids_;
+    vtr::vector<RRSegmentId,t_segment_inf> segments_;
+
+    //Misc.
+    bool dirty_ = false;
+
+    //Fast look-up 
+    typedef std::vector<std::vector<std::vector<std::vector<std::vector<RRNodeId>>>>> NodeLookup;
+    mutable NodeLookup node_lookup_; //[0..xmax][0..ymax][0..NUM_TYPES-1][0..ptc_max][0..NUM_SIDES-1]
 };
 
 #endif

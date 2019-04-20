@@ -5,7 +5,7 @@
  * A rr_graph will be built based on architecture parameters
  * and it will be used for routing engines.
  */
-void t_rr_graph::build_detail_rr_graph() {
+void RRGraph::build_unidir_tileable_rr_graph(t_arch& arch, DeviceGrid& device_grid) {
 
   return;
 }

@@ -5,6 +5,10 @@
 #ifndef CHAN_WIDTH_H
 #define CHAN_WIDTH_H
 
+#include <algorithm>
+#include <cmath>
+#include <climits>
+
 #include "device_grid.h"
 
 /* Class Channel width */

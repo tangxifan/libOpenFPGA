@@ -1,6 +1,7 @@
 #include "device_grid.h"
 #include "arch_types.h"
 #include "chan_width.h"
+#include "rr_graph_error.h"
 
 /* Embodiment Functions for class t_chan_width */
 static float comp_width(t_chan * chan, float x, float separation) {
@@ -21,12 +22,12 @@ static float comp_width(t_chan * chan, float x, float separation) {
         case GAUSSIAN:
             val = (x - chan->xpeak) * (x - chan->xpeak)
                     / (2 * chan->width * chan->width);
-            val = chan->peak * exp(-val);
+            val = chan->peak * std::exp(-val);
             val += chan->dc;
             break;
 
         case PULSE:
-            val = (float) fabs((double) (x - chan->xpeak));
+            val = (float) std::fabs((double) (x - chan->xpeak));
             if (val > chan->width / 2.) {
                 val = 0;
             } else {
@@ -45,8 +46,9 @@ static float comp_width(t_chan * chan, float x, float separation) {
             break;
 
         default:
-            vpr_throw(VPR_ERROR_ROUTE, __FILE__, __LINE__,
-                    "in comp_width: Unknown channel type %d.\n", chan->type);
+            rr_graph_throw(__FILE__, __LINE__,
+                           "in comp_width: Unknown channel type %d.\n", 
+                           chan->type);
             val = OPEN;
             break;
     }
@@ -76,8 +78,8 @@ void t_chan_width::init(const DeviceGrid& grid,
 
         for (size_t i = 0; i < grid.height(); ++i) {
             float y = float(i) / num_channels;
-            x_list_[i] = (int) floor(cfactor * comp_width(&chan_x_dist, y, separation) + 0.5);
-            x_list_[i] = max(x_list_[i], 1); //Minimum channel width 1
+            x_list_[i] = (int) std::floor(cfactor * comp_width(&chan_x_dist, y, separation) + 0.5);
+            x_list_[i] = std::max(x_list_[i], 1); //Minimum channel width 1
         }
     }
 
@@ -89,8 +91,8 @@ void t_chan_width::init(const DeviceGrid& grid,
         for (size_t i = 0; i < grid.width(); ++i) { //-2 for no perim channels
             float x = float(i) / num_channels;
 
-            y_list_[i] = (int) floor(cfactor * comp_width(&chan_y_dist, x, separation) + 0.5);
-            y_list_[i] = max(y_list_[i], 1); //Minimum channel width 1
+            y_list_[i] = (int) std::floor(cfactor * comp_width(&chan_y_dist, x, separation) + 0.5);
+            y_list_[i] = std::max(y_list_[i], 1); //Minimum channel width 1
         }
     }
 
@@ -98,14 +100,14 @@ void t_chan_width::init(const DeviceGrid& grid,
     x_max_ = y_max_ = INT_MIN;
     x_min_ = y_min_ = INT_MAX;
     for (size_t i = 0; i < grid.height(); ++i) {
-        max_ = max(max_, x_list_[i]);
-        x_max_ = max(x_max_, x_list_[i]);
-        x_min_ = min(x_min_, x_list_[i]);
+        max_ = std::max(max_, x_list_[i]);
+        x_max_ = std::max(x_max_, x_list_[i]);
+        x_min_ = std::min(x_min_, x_list_[i]);
     }
     for (size_t i = 0; i < grid.width(); ++i) {
-        max_ = max(max_, y_list_[i]);
-        y_max_ = max(y_max_, y_list_[i]);
-        y_min_ = min(y_min_, y_list_[i]);
+        max_ = std::max(max_, y_list_[i]);
+        y_max_ = std::max(y_max_, y_list_[i]);
+        y_min_ = std::min(y_min_, y_list_[i]);
     }
 
 #ifdef VERBOSE

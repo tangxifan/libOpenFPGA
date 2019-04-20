@@ -3,7 +3,7 @@
 #include "vtr_util.h"
 #include "rr_graph_error.h"
 
-void rrgraph_throw(const char* filename, int line, const char* fmt, ...) {
+void rr_graph_throw(const char* filename, int line, const char* fmt, ...) {
     va_list va_args;
 
     va_start(va_args, fmt);

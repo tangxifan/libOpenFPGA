@@ -59,12 +59,17 @@ int main(int argc, char **argv) {
 
     /* Build the grid */
 
-    /* Build rr_graph  */
-    t_rr_graph rr_graph;
-    rr_graph.build_detail_rr_graph();
+    /* Build the chan_width??? */
 
+    /* Create a rr_graph object and perform testing for major functions */
+    RRGraph global_rr_graph;
+
+    /* 
+    rr_graph.build_detail_rr_graph();
+    */
     /* Optional: dump the built rr_graph  */
-    rr_graph.dump_rr_graph_to_file();
+    const char* outfile = "rr_graph_out.xml";
+    global_rr_graph.dump_rr_graph_to_file(outfile);
 
     /* Deconstruct and free */
     free(arch);
