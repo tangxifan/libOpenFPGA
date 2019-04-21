@@ -1,13 +1,33 @@
 #ifndef RR_GRAPH_BUILDER_OPTS
 #define RR_GRAPH_BUILDER_OPTS
 
+enum e_base_cost_type {
+	DELAY_NORMALIZED, 
+	DELAY_NORMALIZED_LENGTH, 
+	DELAY_NORMALIZED_FREQUENCY, 
+	DELAY_NORMALIZED_LENGTH_FREQUENCY, 
+    DEMAND_ONLY
+};
+
+enum e_clock_modeling {
+    IDEAL_CLOCK,      //Treat the clock pins as ideal (i.e. not routed)
+    ROUTED_CLOCK,     //Treat the clock pins as normal nets (i.e. routed)
+    DEDICATED_NETWORK //Connect clock pins to a dedicated clock network
+};
+
+enum class e_router_lookahead {
+    CLASSIC, //VPR's classic lookahead (assumes uniform wire types)
+    MAP,     //Lookahead considering different wire types (see Oleg Petelin's MASc Thesis)
+    NO_OP    //A no-operation lookahead which always returns zero
+};
+
 struct t_rr_graph_builder_opts {
   /* TODO: To simplify the input of rr_graph builders,
    * The option data structure includes other data structures.   
    * Ideally, they should come from major input data structures:
    * t_arch, device_grid, etc.
    */ 
-  int numTypes;
+  int num_types;
   t_type_descriptor* types = NULL;
 
   /* Copies from router opts, to keep things separated */

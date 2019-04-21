@@ -14,7 +14,6 @@ enum {
     RR_GRAPH_WARN_CHAN_WIDTH_CHANGED = 0x02
 };
 
-
 void rr_graph_throw(const char* filename, int line, const char* fmt, ...);
 
 class RRGraphError : public vtr::VtrError {

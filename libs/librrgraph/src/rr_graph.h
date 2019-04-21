@@ -28,9 +28,8 @@ typedef enum e_rr_graph_type t_rr_graph_type;
 
 class RRGraph {
   public: /* RR graph Builder*/ 
-    void build_global_rr_graph(const t_build_rr_graph_opts build_opts,
+    void build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
                                const t_arch& arch,
-                               const t_det_routing_arch& det_routing_arch,
                                const DeviceGrid& device_grid); 
     void build_bidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
     void build_unidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
@@ -52,7 +51,7 @@ class RRGraph {
   public: //Accessors
     /* Graph type */
     t_rr_graph_type type() const;
-    e_direction directionality() const;
+    e_directionality directionality() const;
 
     //Aggregates
     node_range nodes() const;
@@ -108,7 +107,7 @@ class RRGraph {
   public: //Mutators
     /* RR graph type */
     void set_type(t_rr_graph_type type);
-    void set_directionality(e_direction directionality);
+    void set_directionality(e_directionality directionality);
 
     /* Related to Nodes */
     RRNodeId create_node(t_rr_type type);
@@ -181,7 +180,7 @@ class RRGraph {
 
     /* Type of this rr_graph */
     t_rr_graph_type type_;
-    e_direction directionality_;
+    e_directionality directionality_;
 
     //Node related data
     vtr::vector<RRNodeId,RRNodeId> node_ids_;
