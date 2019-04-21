@@ -2,8 +2,8 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef RR_GRAPH_OBJ_H
-#define RR_GRAPH_OBJ_H
+#ifndef RR_GRAPH_H
+#define RR_GRAPH_H
 
 #include <limits>
 
@@ -13,6 +13,7 @@
 #include "vtr_geometry.h"
 #include "arch_types.h"
 #include "rr_graph_node_types.h"
+#include "rr_graph_builder_opts.h"
 #include "device_grid.h"
 
 /* describe the type of a rr_graph */
@@ -27,7 +28,10 @@ typedef enum e_rr_graph_type t_rr_graph_type;
 
 class RRGraph {
   public: /* RR graph Builder*/ 
-    void build_global_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
+    void build_global_rr_graph(const t_build_rr_graph_opts build_opts,
+                               const t_arch& arch,
+                               const t_det_routing_arch& det_routing_arch,
+                               const DeviceGrid& device_grid); 
     void build_bidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
     void build_unidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
     void build_unidir_tileable_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
@@ -48,6 +52,7 @@ class RRGraph {
   public: //Accessors
     /* Graph type */
     t_rr_graph_type type() const;
+    e_direction directionality() const;
 
     //Aggregates
     node_range nodes() const;
@@ -103,6 +108,7 @@ class RRGraph {
   public: //Mutators
     /* RR graph type */
     void set_type(t_rr_graph_type type);
+    void set_directionality(e_direction directionality);
 
     /* Related to Nodes */
     RRNodeId create_node(t_rr_type type);
@@ -175,6 +181,7 @@ class RRGraph {
 
     /* Type of this rr_graph */
     t_rr_graph_type type_;
+    e_direction directionality_;
 
     //Node related data
     vtr::vector<RRNodeId,RRNodeId> node_ids_;

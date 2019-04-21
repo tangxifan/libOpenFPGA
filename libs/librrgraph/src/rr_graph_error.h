@@ -6,6 +6,15 @@
 
 #define RR_GRAPH_ERROR "librrgraph"
 
+/* Warnings about the routing graph that can be returned.
+ * This is to avoid output messages during a value sweep */
+enum {
+    RR_GRAPH_NO_WARN = 0x00,
+    RR_GRAPH_WARN_FC_CLIPPED = 0x01,
+    RR_GRAPH_WARN_CHAN_WIDTH_CHANGED = 0x02
+};
+
+
 void rr_graph_throw(const char* filename, int line, const char* fmt, ...);
 
 class RRGraphError : public vtr::VtrError {

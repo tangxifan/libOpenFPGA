@@ -669,6 +669,24 @@ void RRGraph::set_type(t_rr_graph_type type) {
 } 
 
 /*
+ * Get the directionality of a rr_graph: \
+ * bi-directional or uni-directional 
+ */
+e_direction RRGraph::directionality() const {
+  return directionality_;
+} 
+
+/*
+ * Set the directionality of a rr_graph: \
+ * bi-directional or uni-directional 
+ */
+void RRGraph::set_directionality(e_direction directionality) {
+  directionality_ = directionality;
+
+  return;
+} 
+
+/*
  * Get a switch from the rr_switch list with a given id  
  */
 t_rr_switch_inf RRGraph::get_switch(RRSwitchId switch_id) const {

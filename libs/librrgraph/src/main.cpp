@@ -61,6 +61,8 @@ int main(int argc, char **argv) {
 
     /* Build the chan_width??? */
 
+    /* Create the options for rr_graph builders */
+
     /* Create a rr_graph object and perform testing for major functions */
     RRGraph global_rr_graph;
 
