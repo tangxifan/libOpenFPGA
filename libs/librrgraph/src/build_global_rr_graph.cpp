@@ -3,11 +3,15 @@
 #include "rr_graph.h"
 #include "rr_graph_error.h"
 #include "rr_graph_builder_opts.h"
+#include "device_types.h"
 #include "clb2clb_directs.h"
+#include "seg_details.h"
+#include "chan_width.h"
 
 void RRGraph::build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
                                     const t_arch& arch, 
-                                    const DeviceGrid& device_grid) {
+                                    const DeviceGrid& device_grid,
+                                    const DeviceTypes& device_types) {
 
   vtr::ScopedStartFinishTimer timer("Build global routing resource graph");
 
@@ -29,30 +33,32 @@ void RRGraph::build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
   /* FIXME: this function is used during placement and routing, should be a common class */
   Clb2ClbDirects clb2clb_directs;
   clb2clb_directs.init(arch.num_directs, arch.Directs, 
-                       builder_opts.num_types, builder_opts.types,
+                       device_types,
                        builder_opts.delayless_switch);
 
-//  /* START SEG_DETAILS */
-//  int num_seg_details = 0;
-//  t_seg_details *seg_details = nullptr;
-//
-//  /* Sets up a single unit length segment type for global routing. */
-//  seg_details = alloc_and_load_global_route_seg_details(det_routing_arch.global_route_switch, 
-//                                                        &num_seg_details);
-//
-//  /* END SEG_DETAILS */
-//
-//  /* START CHAN_DETAILS */
-//  t_chan_details chan_details_x;
-//  t_chan_details chan_details_y;
-//
-//  t_chan_width chan_width = init_chan(builder_opts.chan_width_fac, arch.Chans);
-//
-//  alloc_and_load_chan_details(device_grid, &chan_width,
-//                              builder_opts.trim_empty_channels, builder_opts.trim_obs_channels,
-//                              num_seg_details, seg_details,
-//                              chan_details_x, chan_details_y);
-//
+  t_chan_width chan_width;
+  chan_width.init(device_grid, builder_opts.chan_width_fac, arch.Chans);
+
+  /* START SEG_DETAILS */
+  int num_seg_details = 0;
+  t_seg_details *seg_details = nullptr;
+
+  /* Sets up a single unit length segment type for global routing. */
+  seg_details = alloc_and_load_global_route_seg_details(builder_opts.global_route_switch, 
+                                                        &num_seg_details);
+
+  /* END SEG_DETAILS */
+
+  /* START CHAN_DETAILS */
+  t_chan_details chan_details_x;
+  t_chan_details chan_details_y;
+
+
+  alloc_and_load_chan_details(device_types, device_grid, &chan_width,
+                              builder_opts.trim_empty_channels, builder_opts.trim_obs_channels,
+                              num_seg_details, seg_details,
+                              chan_details_x, chan_details_y);
+
 //#ifdef VERBOSE
 //  if ( true == builder_opts.echo_chan_details ) {
 //    /* Assert: must have a valid filename if echo is enabled */
@@ -64,31 +70,31 @@ void RRGraph::build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
 //                      builder_opts.chan_details_echo_filename);
 //  }
 //#endif
-//  /* END CHAN_DETAILS */
-//
-//  /* START FC */
-//  /* Determine the actual value of Fc */
-//  std::vector<vtr::Matrix<int>> Fc_in; /* [0..device_ctx.num_block_types-1][0..num_pins-1][0..num_segments-1] */
-//  std::vector<vtr::Matrix<int>> Fc_out; /* [0..device_ctx.num_block_types-1][0..num_pins-1][0..num_segments-1] */
-//
-//  /* get maximum number of pins across all blocks */
-//  int max_pins = builder_opts.types[0].num_pins;
-//  for (int i = 1; i < builder_opts.num_types; ++i) {
-//    if (builer_opts.types[i].num_pins > max_pins) {
-//      max_pins = builder_opts.types[i].num_pins;
-//    }
-//  }
-//
-//  /* get the number of 'sets' for each segment type -- unidirectial architectures have two tracks in a set, bidirectional have one */
-//  int total_sets = max_chan_width;
-//
-//  int *sets_per_seg_type = get_seg_track_counts(total_sets, arch.Segments, use_full_seg_groups);
-//
-//  //All pins can connect during global routing
-//  auto ones = vtr::Matrix<int>({size_t(max_pins), arch.Segments.size()}, 1);
-//  Fc_in = std::vector<vtr::Matrix<int>>(builder_opts.num_types, ones);
-//  Fc_out = std::vector<vtr::Matrix<int>>(builder_opts.num_types, ones);
-//
+  /* END CHAN_DETAILS */
+
+  /* START FC */
+  /* Determine the actual value of Fc */
+  std::vector<vtr::Matrix<int>> Fc_in; /* [0..device_ctx.num_block_types-1][0..num_pins-1][0..num_segments-1] */
+  std::vector<vtr::Matrix<int>> Fc_out; /* [0..device_ctx.num_block_types-1][0..num_pins-1][0..num_segments-1] */
+
+  /* get maximum number of pins across all blocks */
+  int max_pins = device_types.get_types(0)->num_pins;
+  for (int i = 1; i < device_types.get_num_types(); ++i) {
+    if (device_types.get_types(i)->num_pins > max_pins) {
+      max_pins = device_types.get_types(i)->num_pins;
+    }
+  }
+
+  /* get the number of 'sets' for each segment type -- unidirectial architectures have two tracks in a set, bidirectional have one */
+  int total_sets = max_chan_width;
+
+  int *sets_per_seg_type = get_seg_track_counts(total_sets, arch.Segments, use_full_seg_groups);
+
+  //All pins can connect during global routing
+  auto ones = vtr::Matrix<int>({size_t(max_pins), arch.Segments.size()}, 1);
+  Fc_in = std::vector<vtr::Matrix<int>>(device_types.get_num_types(), ones);
+  Fc_out = std::vector<vtr::Matrix<int>>(device_types.get_num_types(), ones);
+
 //  auto perturb_ipins = alloc_and_load_perturb_ipins(arch.num_types, arch.Segments.size(),
 //                                                    sets_per_seg_type, Fc_in, Fc_out, 
 //                                                    this->directionality());
@@ -228,9 +234,6 @@ void RRGraph::build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
 //  }
 //
 //  free_type_track_to_pin_map(track_to_pin_lookup, types, max_chan_width);
-//  if (clb_to_clb_directs != nullptr) {
-//      free(clb_to_clb_directs);
-//  }
 
   return; 
 }

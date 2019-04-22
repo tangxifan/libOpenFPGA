@@ -15,6 +15,7 @@
 #include "rr_graph_node_types.h"
 #include "rr_graph_builder_opts.h"
 #include "device_grid.h"
+#include "device_types.h"
 
 /* describe the type of a rr_graph */
 enum e_rr_graph_type {
@@ -30,7 +31,8 @@ class RRGraph {
   public: /* RR graph Builder*/ 
     void build_global_rr_graph(const t_rr_graph_builder_opts builder_opts,
                                const t_arch& arch,
-                               const DeviceGrid& device_grid); 
+                               const DeviceGrid& device_grid, 
+                               const DeviceTypes& device_types);
     void build_bidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
     void build_unidir_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
     void build_unidir_tileable_rr_graph(t_arch& arch, DeviceGrid& device_grid); 
@@ -78,7 +80,7 @@ class RRGraph {
     short node_class_num(RRNodeId node) const;
 
     short node_cost_index(RRNodeId node) const;
-    e_direction node_direction(RRNodeId node) const;
+    e_seg_direction node_direction(RRNodeId node) const;
     e_side node_side(RRNodeId node) const;
     float node_R(RRNodeId node) const;
     float node_C(RRNodeId node) const;
@@ -131,7 +133,7 @@ class RRGraph {
     void set_node_class_num(RRNodeId node, short class_id);
 
     void set_node_cost_index(RRNodeId node, short cost_index);
-    void set_node_direction(RRNodeId node, e_direction direction);
+    void set_node_direction(RRNodeId node, e_seg_direction direction);
     void set_node_side(RRNodeId node, e_side side);
     void set_node_R(RRNodeId node, float R);
     void set_node_C(RRNodeId node, float C);
@@ -191,7 +193,7 @@ class RRGraph {
     vtr::vector<RRNodeId,short> node_capacities_;
     vtr::vector<RRNodeId,short> node_ptc_nums_;
     vtr::vector<RRNodeId,short> node_cost_indices_;
-    vtr::vector<RRNodeId,e_direction> node_directions_;
+    vtr::vector<RRNodeId,e_seg_direction> node_directions_;
     vtr::vector<RRNodeId,e_side> node_sides_;
     vtr::vector<RRNodeId,float> node_Rs_;
     vtr::vector<RRNodeId,float> node_Cs_;

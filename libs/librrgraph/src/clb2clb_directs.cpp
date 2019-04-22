@@ -5,19 +5,19 @@
 #include "clb2clb_directs.h"
 
 /* Member functions of Clb2ClbDirectPort */
-t_type_descriptor* Clb2ClbDirectPort::get_clb_type() { 
+const t_type_descriptor* Clb2ClbDirectPort::get_clb_type() const { 
   return clb_type_;
 }
 
-int Clb2ClbDirectPort::get_pin_start_index() {
+int Clb2ClbDirectPort::get_pin_start_index() const {
   return pin_start_index_;
 }
 
-int Clb2ClbDirectPort::get_pin_end_index() {
+int Clb2ClbDirectPort::get_pin_end_index() const {
   return pin_end_index_;
 }
 
-void Clb2ClbDirectPort::set_clb_type(t_type_descriptor* type) {
+void Clb2ClbDirectPort::set_clb_type(const t_type_descriptor* type) {
   clb_type_ = type;
   return;
 }
@@ -79,8 +79,7 @@ void Clb2ClbDirectPort::create_type_pin_lookup() {
  ***************************************************************************************/
 void Clb2ClbDirectPort::parse(const std::string& src_string, 
                               const int line,
-                              const int num_types, 
-                              t_type_descriptor* types) {
+                              const DeviceTypes& device_types) {
   /* Parses out the pb_type_name and port_name from the direct passed in.   *
    * If the start_pin_index and end_pin_index is specified, parse them too. *
    * Return the values parsed by reference.                                 */
@@ -109,10 +108,10 @@ void Clb2ClbDirectPort::parse(const std::string& src_string,
   /* First part should be pb_type */
   /* See if there is name match in types */
   this->set_clb_type(nullptr);
-  for (size_t j = 0; j < num_types; ++j) {
-    if (0 == split_string[0].compare(types[j].name)) {
+  for (size_t j = 0; j < device_types.get_num_types(); ++j) {
+    if (0 == split_string[0].compare(device_types.get_types(j)->name)) {
       /* Reach here, it means we have found type_descriptor, fill the clb2clb_directs */
-      this->set_clb_type(&(types[j]));
+      this->set_clb_type(device_types.get_types(j));
       break;
     }
   }
@@ -288,8 +287,7 @@ void Clb2ClbDirects::set_directs(const size_t num_directs, const t_direct_inf* d
   return;
 }
 
-void Clb2ClbDirects::create_clb2clb_directs(const int num_types, 
-                                            t_type_descriptor* types,
+void Clb2ClbDirects::create_clb2clb_directs(const DeviceTypes& device_types,
                                             const short default_switch_id) {
   /* Allocate clb2clb_directs*/
   this->from_directs_.resize(this->get_num_directs());
@@ -299,11 +297,11 @@ void Clb2ClbDirects::create_clb2clb_directs(const int num_types,
   for (size_t idirect = 0; idirect < this->get_num_directs(); ++idirect) {
     /* Parse from_directs */
     this->from_directs_[idirect].parse(directs_[idirect].from_pin, directs_[idirect].line, 
-                                       num_types, types);
+                                       device_types);
     
     /* Parse to_directs */
     this->to_directs_[idirect].parse(directs_[idirect].to_pin, directs_[idirect].line,
-                                      num_types, types);
+                                     device_types);
 
     //Set the switch index
     if (directs_[idirect].switch_type > 0) {
@@ -320,10 +318,10 @@ void Clb2ClbDirects::create_clb2clb_directs(const int num_types,
 
 /* Constuctor */
 void Clb2ClbDirects::init(const int num_directs, const t_direct_inf* directs, 
-                          const int num_types, t_type_descriptor* types,
+                          const DeviceTypes& device_types,
                           const short default_switch_id) {
   this->set_directs(num_directs, directs);
-  this->create_clb2clb_directs(num_types, types, default_switch_id);
+  this->create_clb2clb_directs(device_types, default_switch_id);
 
   return;
 }

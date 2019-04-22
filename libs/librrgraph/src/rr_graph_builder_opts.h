@@ -22,14 +22,6 @@ enum class e_router_lookahead {
 };
 
 struct t_rr_graph_builder_opts {
-  /* TODO: To simplify the input of rr_graph builders,
-   * The option data structure includes other data structures.   
-   * Ideally, they should come from major input data structures:
-   * t_arch, device_grid, etc.
-   */ 
-  int num_types;
-  t_type_descriptor* types = NULL;
-
   /* Copies from router opts, to keep things separated */
   bool trim_empty_channels;
   bool trim_obs_channels;
@@ -41,6 +33,7 @@ struct t_rr_graph_builder_opts {
   int chan_width_fac;
 
   /* Switch information, should be a copy from t_det_arch */
+  short global_route_switch;
   short delayless_switch;
   
   /* Flags to echo any internal data structures */

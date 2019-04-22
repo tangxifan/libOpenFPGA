@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "arch_types.h"
+#include "device_types.h"
 
 /*
  * A class for clb_to_clb_directs
@@ -21,18 +22,18 @@
 class Clb2ClbDirectPort {
   public: /* Constructor */
     void parse(const std::string& src_string, const int line,
-               const int num_types, t_type_descriptor* types);
+               const DeviceTypes& device_types);
   public: /* Access */
-    t_type_descriptor* get_clb_type();
-    int get_pin_start_index();
-    int get_pin_end_index();
+    const t_type_descriptor* get_clb_type() const;
+    int get_pin_start_index() const;
+    int get_pin_end_index() const;
   private: /* Mutators */
-    void set_clb_type(t_type_descriptor* type);
+    void set_clb_type(const t_type_descriptor* type);
     void set_pin_start_index(int start_index);
     void set_pin_end_index(int end_index);
     void create_type_pin_lookup();
   private: /* Internal data */
-    t_type_descriptor* clb_type_;
+    const t_type_descriptor* clb_type_;
     int pin_start_index_;
     int pin_end_index_;
     /* look-up for pin-index in the type */
@@ -42,7 +43,7 @@ class Clb2ClbDirectPort {
 class Clb2ClbDirects {
   public: /* Constructors */
     void init(const int num_directs, const t_direct_inf* directs, 
-              const int num_types, t_type_descriptor* types,
+              const DeviceTypes& device_types,
               const short default_switch_id);
 
   public: /* Access to internal data */
@@ -54,8 +55,7 @@ class Clb2ClbDirects {
     
   private: /* Mutators: data allocation and loading */
     void set_directs(const size_t num_directs, const t_direct_inf* directs);
-    void create_clb2clb_directs(const int num_types, 
-                                t_type_descriptor* types,
+    void create_clb2clb_directs(const DeviceTypes& device_types,
                                 const short default_switch_id); /* Convert directs to clb2clb_directs*/
 
   private: /* Internal Data */

@@ -87,7 +87,7 @@ short RRGraph::node_cost_index(RRNodeId node) const {
     return node_cost_indices_[node];
 }
 
-e_direction RRGraph::node_direction(RRNodeId node) const {
+e_seg_direction RRGraph::node_direction(RRNodeId node) const {
     VTR_ASSERT_MSG(node_type(node) == CHANX || node_type(node) == CHANY, "Direction valid only for SOURCE/SINK RR nodes");
     return node_directions_[node];
 }
@@ -354,7 +354,7 @@ void RRGraph::set_node_cost_index(RRNodeId node, short cost_index) {
     node_cost_indices_[node] = cost_index;
 }
 
-void RRGraph::set_node_direction(RRNodeId node, e_direction direction) {
+void RRGraph::set_node_direction(RRNodeId node, e_seg_direction direction) {
     VTR_ASSERT(valid_node_id(node));
     VTR_ASSERT_MSG(node_type(node) == CHANX || node_type(node) == CHANY, "Direct can only be specified on CHANX/CNAY rr nodes");
 

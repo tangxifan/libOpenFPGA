@@ -1,3 +1,5 @@
+#ifndef RR_GRAPH_NODE_TYPES_H
+#define RR_GRAPH_NODE_TYPES_H
 /**
  * Header file for critical types of nodes in rr_graph
  */
@@ -40,7 +42,7 @@ constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename { {
  * 4. NUM_DIRECTIONS:
  *    A quick counter for directionality types
  */
-enum e_direction : unsigned char {
+enum e_seg_direction : unsigned char {
 	INC_DIRECTION = 0,
     DEC_DIRECTION = 1,
     BI_DIRECTION = 2,
@@ -48,3 +50,4 @@ enum e_direction : unsigned char {
     NUM_DIRECTIONS
 };
 
+#endif
